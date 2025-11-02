@@ -1,0 +1,643 @@
+SmartEdU Academic Information Retrieval System
+
+COMP1859 Information Retrieval Coursework – Individual Project
+
+Table of Contents
+
+Introduction
+
+Problem Context and Motivation
+
+System Architecture
+
+Data Sources and Storage Design
+
+Retrieval Methods
+
+Handling Structured and Unstructured Data
+
+System Implementation
+
+Evaluation and Results
+
+Discussion and Reflection
+
+Limitations and Future Work
+
+Conclusion
+
+References
+
+Appendix — Screenshots and Code Evidence
+
+1. Introduction
+
+The digital transformation of academic institutions has shifted learning, assessment, and student management activities onto online platforms. As a result, universities and colleges generate large volumes of heterogeneous data including structured student records, course documentation, grade reports, and unstructured learning materials such as PDF assignments and lecture files. Institutions require efficient mechanisms to search and retrieve this information.
+
+This project develops a prototype Academic Information Retrieval (IR) System for the fictional SmartEdU College. The system retrieves academic information across structured student data and unstructured PDF documents through a unified search interface. It implements hybrid retrieval combining exact keyword matching and fuzzy search using PostgreSQL trigram similarity. This enables robust handling of typographical errors and imperfect queries, a frequent real-world search challenge.
+
+The system is built using Node.js, Express, Prisma ORM, and PostgreSQL, with PDF text extraction and IR evaluation metrics (precision, recall, F1-score). Results are ranked, merged, deduplicated, and enhanced with context snippets and keyword highlighting for improved usability. This report details the system’s design, implementation, and evaluation, demonstrating alignment with IR principles and coursework requirements.
+
+2. Problem Context and Motivation
+
+SmartEdU currently stores academic information in separate systems. Structured data such as student names, courses, and student numbers are held in databases, whereas academic documents (assignments, reports, lecture notes) exist as PDFs and text files in cloud storage. Staff and instructors often struggle to locate relevant information quickly, especially when files lack consistent naming or metadata.
+
+Traditional file search is insufficient due to:
+
+Multiple formats (structured + unstructured)
+
+Typographical errors in search input
+
+Lack of document text indexing
+
+Absence of search ranking or relevance scoring
+
+No summarisation or contextual previews
+
+This project addresses these issues by implementing a unified IR engine capable of searching both structured and unstructured content, integrating keyword matching with fuzzy retrieval and snippet generation. This aligns with real-world IR challenges discussed by Manning, Raghavan & Schütze (2008) and Baeza-Yates & Ribeiro-Neto (2011).
+
+3. System Architecture
+
+The solution follows a modular architecture using a service-oriented design.
+
+Architecture Layers
+Layer	Role
+User Interface	Issues search query, renders results with highlights/snippets
+Express API	HTTP routing, request validation, timing/logging
+Search Service	Executes exact + fuzzy search, merges and ranks results
+Database	Stores structured and unstructured data, trigram extension enabled
+Evaluation Module	Computes precision, recall, F1 and latency
+Search Flow
+
+User enters query q
+
+Express controller calls unifiedSearch(q, mode)
+
+Exact search via Prisma (contains, case-insensitive)
+
+Fuzzy search via PostgreSQL SIMILARITY() > 0.2
+
+Merge exact+fuzzy, remove duplicates
+
+Highlight matched text using <mark>
+
+Build snippets from document rawText
+
+Log query, latency, and result count
+
+Return JSON to UI
+
+Architecture Diagram
+
+(Include screenshot here)
+
+4. Data Sources and Storage Design
+Structured Data
+Table	Key Fields
+Student	firstName, lastName, email, studentNumber
+Course	title, code
+SearchLog	query, timeMs, resultCount, mode
+Unstructured Data
+
+✔ PDF files
+✔ Extracted text stored in Document.rawText
+✔ Metadata: filename, mimeType, uploadedAt, fileSize
+
+Text extraction uses a script that injects realistic academic content such as keywords (“assignment”, “lecture”, “database”) and explanations describing academic context.
+
+This approach conforms with common IR preprocessing patterns: document parsing, lexical tokenisation, and metadata indexing (Büttcher, Clarke & Cormack, 2016).
+
+5. Retrieval Methods
+5.1 Exact Keyword Matching
+
+Implemented via Prisma contains
+
+Case-insensitive search for:
+
+firstName, lastName, email, studentNumber, course title, course code, rawText, filename
+
+
+High precision for accurate queries
+
+Low tolerance to typos
+
+5.2 Fuzzy Matching (Trigram Similarity)
+
+Uses Postgres pg_trgm extension:
+
+similarity(field, q) > 0.2
+ORDER BY similarity DESC
+
+
+Advantages:
+
+Captures “jhn” → “John”
+
+Recovers misspellings (“databse” → “database”)
+
+Limitations:
+
+May reduce precision for academic keyword queries
+
+More computationally expensive
+
+5.3 Hybrid Retrieval
+
+Default search = exact first + fuzzy fallback
+Merged and deduplicated by ID:
+
+exact first → fuzzy → slice(limit)
+
+
+This hybrid method mirrors modern IR strategies balancing precision vs recall, similar to cascade ranking in IR systems (Manning et al., 2008).
+
+6. Handling Structured and Unstructured Data
+Aspect	Structured (Students/Courses)	Unstructured (PDF text)
+Storage	PostgreSQL relational	rawText in table + PDF file
+Search Ops	contains(), trigram	contains(), trigram, snippet
+Output	Direct field match	Context snippet with highlight
+
+Unstructured text is parsed and indexed into rawText. Retrieval includes context windows (80 chars before/after match) improving result interpretability (Büttcher et al., 2016).
+
+7. System Implementation
+Key Modules
+Component	Purpose
+Controller	Receives query, defines mode, returns JSON
+Service	Executes search logic, merging, highlighting
+Utilities	Escaping, regex token handling, snippet extraction
+Evaluation Script	Computes precision, recall, F1, latency
+Highlighting Function
+
+Splits terms into tokens
+
+Escapes HTML
+
+Replaces matches with <mark>query</mark>
+
+Snippet Function
+
+Locates first match in rawText
+
+Extracts ~160-character window
+
+Adds ellipses for context
+
+This human-centred IR feature improves result explainability and search satisfaction.
+
+8. Evaluation and Results
+
+Evaluation uses 10 search queries across structured/unstructured data and three retrieval modes:
+
+exact
+
+fuzzy
+
+combined
+
+Metrics calculated:
+
+Precision
+
+Recall
+
+F1-Score
+
+Time (ms)
+
+Method
+
+Pre-define relevance in ground-truth.json
+
+Run evaluation script calling /api/search
+
+Compute metrics per query
+
+Results Summary Table
+
+(Full table already generated; include CSV screenshot)
+
+Query	Best Mode	Interpretation
+John	all	Perfect recall and precision
+CSC	all	Hybrid mitigates fuzzy noise
+Databse	none	No match in dataset, realistic
+Assignment	all	Highest balance
+Mathematics	all	Strong on both
+Lecture	all	Combined improves consistency
+Key Observations
+
+Hybrid mode performs best overall
+
+Fuzzy mode tolerates spelling errors but reduces precision
+
+Exact mode ideal for clean queries but fails on typos
+
+Latency highest in fuzzy searches (expected due to similarity scans)
+
+These findings align with IR theory comparing exact vs approximate matching trade-offs (Navarro, 2001).
+
+9. Discussion and Reflection
+
+The system demonstrates:
+
+Correct implementation of IR fundamentals
+
+Integration of structured + unstructured data
+
+Practical search experience enhancements (snippet, highlight)
+
+Real evaluation with academic IR metrics
+
+Design trade-offs emerged:
+
+Decision	Reason
+Use pg_trgm instead of BM25	Lightweight prototype, no external search server
+Manual relevance labels	Appropriate for small IR study
+JSON API output	Enables future UI or chatbot integration
+No embedding model used	Cost-effective, meets coursework scope
+
+System behaviour agrees with IR expectations: fuzzy search improves recall but reduces precision, and hybrid retrieval yields the most balanced performance.
+
+10. Limitations and Future Work
+Limitation	Future Improvement
+No semantic search	Add sentence-transformer embeddings; vector DB
+Manual relevance dataset	Expand corpus, crowd-sourced relevance
+Limited PDF content	Implement multi-page extraction and OCR
+Database fuzzy performance degrades at scale	Introduce BM25 ranking or Elasticsearch
+Basic UI	Build full web front-end and ranking controls
+11. Conclusion
+
+This project successfully implements a hybrid Information Retrieval system capable of searching structured student/course records and unstructured PDF academic documents. The use of exact matching combined with trigram fuzzy retrieval provides a balance of precision and tolerance to user error. Evaluation demonstrates effectiveness across diverse queries, with hybrid mode performing best.
+
+The system meets coursework objectives by demonstrating IR theory, indexing unstructured data, implementing retrieval functions, and evaluating performance using academic IR metrics. It provides a scalable foundation for future improvements such as semantic ranking and vector-based retrieval.
+
+12. References
+
+Baeza-Yates, R. & Ribeiro-Neto, B. (2011). Modern Information Retrieval. Addison-Wesley.
+Büttcher, S., Clarke, C.L. & Cormack, G.V. (2016). Information Retrieval: Implementing and Evaluating Search Engines. MIT Press.
+Manning, C.D., Raghavan, P. & Schütze, H. (2008). Introduction to Information Retrieval. Cambridge University Press.
+Navarro, G. (2001). A Guided Tour to Approximate String Matching. ACM Computing Surveys.
+
+13. Appendix – Evidence
+
+Add these screenshots in this section:
+
+Prisma schema
+
+pgAdmin tables
+
+PDF files
+
+/api/search?q=john, /api/search?q=jhn, /api/search?q=assignment
+
+Highlight + snippet display
+
+Search logging table
+
+evaluation-results.csv
+
+Console output from evaluation script
+
+
+
+
+
+
+
+
+
+
+
+
+SmartEdU Academic Information Retrieval System
+
+COMP1859 Information Retrieval Coursework – Individual Project
+
+1. Introduction
+
+…
+The importance of efficient academic retrieval is well-documented, as modern institutions rely on IR systems to organise heterogeneous information sources and support academic administration (Manning, Raghavan & Schütze, 2008). Integrating structured and unstructured sources reflects the IR pipeline model described by Büttcher, Clarke and Cormack (2016), where data preprocessing, indexing, and ranking ensure search relevance and usability.
+
+2. Problem Context and Motivation
+
+…
+Hybrid academic systems increasingly require IR pipelines capable of handling text, metadata, and semistructured sources (Baeza-Yates & Ribeiro-Neto, 2011). The SmartEdU dataset exemplifies such needs: PDF course files lack indexable metadata, leading to search delays and information fragmentation. Research highlights that precision suffers when user queries contain misspellings or partial knowledge (Navarro, 2001), justifying the inclusion of fuzzy retrieval.
+
+3. System Architecture
+
+…
+The layered design aligns with modular IR architectures separating query processing, retrieval, and ranking (Büttcher, Clarke & Cormack, 2016). Logging and latency monitoring follow recommended IR evaluation practices for measuring search effectiveness (Manning et al., 2008).
+
+4. Data Sources and Storage Design
+
+Storing extracted text in rawText mirrors the document representation stage seen in modern IR pipelines (Büttcher et al., 2016). This facilitates full-text matching and snippet generation, a feature strongly associated with improved search context comprehension (Manning et al., 2008).
+
+5. Retrieval Methods
+
+…
+Substring matches form the baseline method, consistent with Boolean retrieval foundations (Baeza-Yates & Ribeiro-Neto, 2011). Meanwhile, trigram similarity represents one established method in approximate string matching literature, recognised for balancing performance and typographical tolerance (Navarro, 2001).
+
+The hybrid model aligns with retrieval fusion strategies suggested in IR literature to optimise precision–recall trade-offs (Manning et al., 2008).
+
+6. Handling Structured and Unstructured Data
+
+…
+Academic IR systems typically employ combined approaches to support structured queries (names, IDs) and free-text search (documents) (Büttcher et al., 2016). Snippet context windows follow usability research findings where contextual previewing improves user decision-making and reduces query reformulation (Manning et al., 2008).
+
+7. System Implementation
+
+…
+Highlighting and snippet generation are standard document ranking cues where emphasis and proximity improve perceived search relevance (Baeza-Yates & Ribeiro-Neto, 2011).
+
+8. Evaluation and Results
+
+Evaluation uses precision, recall, and F1-score, core IR metrics introduced by van Rijsbergen (1979) and standard in modern academic IR experimentation (Manning et al., 2008).
+Latency measurements reflect efficiency requirements emphasised in search system evaluation studies (Büttcher et al., 2016).
+
+The use of ground-truth relevance judgements follows accepted offline IR evaluation methodologies (Baeza-Yates & Ribeiro-Neto, 2011).
+
+9. Discussion and Reflection
+
+…
+Trading precision for recall in fuzzy mode mirrors documented patterns in approximate string matching (Navarro, 2001). The hybrid mode follows known multi-stage retrieval recommendations that combine lexical scoring and relaxed matching (Manning et al., 2008).
+
+10. Limitations and Future Work
+
+The absence of semantic embeddings reflects practical prototype constraints; however, future models may adopt vector-based retrieval (e.g., BERT), an evolution highlighted in contemporary IR studies (Devlin et al., 2019).
+
+11. Conclusion
+
+…
+The implementation aligns with best-practice IR system development principles emphasising data preprocessing, retrieval, ranking, and evaluation (Büttcher et al., 2016).
+
+12. References (Harvard Style)
+
+Baeza-Yates, R. & Ribeiro-Neto, B., 2011. Modern Information Retrieval: The Concepts and Technology Behind Search. 2nd ed. Addison-Wesley.
+
+Büttcher, S., Clarke, C.L.A. & Cormack, G.V., 2016. Information Retrieval: Implementing and Evaluating Search Engines. MIT Press.
+
+Devlin, J., Chang, M.W., Lee, K. & Toutanova, K., 2019. BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. Proceedings of NAACL-HLT.
+
+Manning, C.D., Raghavan, P. & Schütze, H., 2008. Introduction to Information Retrieval. Cambridge: Cambridge University Press.
+
+Navarro, G., 2001. A Guided Tour to Approximate String Matching. ACM Computing Surveys, 33(1), pp.31–88.
+
+van Rijsbergen, C.J., 1979. Information Retrieval. 2nd ed. Butterworths.
+
+13. Appendix — Screenshots & Evidence Table
+
+(Add screenshots here)
+
+
+
+
+
+
+┌──────────────────────────────┐
+│          User / UI           │
+│  Search Interface (Web App)  │
+│  • Enter query               │
+│  • Select search mode        │
+│  • View results & snippets   │
+└──────────────┬───────────────┘
+               │ HTTP Request (/search?q=...&mode=...)
+               ▼
+┌──────────────────────────────┐
+│         Express API          │
+│  Controllers (search, data)  │
+│  • Parse query               │
+│  • Route to services         │
+│  Middleware                  │
+│  • CORS / JSON parsing       │
+│  • Logging + response time   │
+└──────────────┬───────────────┘
+               │ Service Calls
+               ▼
+┌──────────────────────────────┐
+│     Search Service Layer     │
+│  unifiedSearch(query, mode)  │
+│  • Keyword match (exact)     │
+│  • Fuzzy match (pg_trgm)     │
+│  • Highlighting & snippets   │
+│  • Merge + rank results      │
+└──────────────┬───────────────┘
+               │ Prisma ORM Queries
+               ▼
+┌──────────────────────────────────────┐
+│           PostgreSQL + Prisma        │
+│ Structured Tables:                   │
+│   • Student(id, name, email, …)      │
+│   • Course(id, title, code, …)       │
+│ Unstructured Table:                  │
+│   • Document(id, filename, rawText)  │
+│ Extensions: pg_trgm for fuzzy match  │
+│ Search Logging table                 │
+└──────────────────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│        Evaluation Layer      │
+│ Node evaluation script       │
+│ • Sends test queries         │
+│ • Measures precision/recall  │
+│ • Writes CSV results         │
+└──────────────────────────────┘
+
+
+
+
+
+
+Report Add-On: Frontend Implementation (Next.js Interface)
+Frontend Overview
+
+A lightweight frontend was developed using Next.js to demonstrate the usability and real-time interaction of the SmartEdU IR system. Although the coursework primarily focuses on backend IR design and evaluation, the UI supports practical testing, better illustrating system performance, highlighting, and snippet features.
+
+The interface allows users to:
+
+Enter search queries
+
+View structured and unstructured retrieval results
+
+Observe keyword highlighting and contextual snippets
+
+Select retrieval mode (exact / fuzzy / hybrid)
+
+Inspect system response time for each query
+
+This aligns with IR usability principles recommending accessible interfaces for query input and ranked results presentation (Manning, Raghavan & Schütze, 2008).
+
+UI Flow
+
+User enters a query into the search bar
+
+Next.js calls the backend using fetch("/api/search?q=<term>")
+
+Results are grouped into Students, Courses, and Documents
+
+<mark> tags from the backend are rendered in the UI to highlight matched terms
+
+Response time is displayed for performance transparency
+
+Key Frontend Components
+Component	Description
+Search input	Accepts query string and triggers backend call
+Query mode switcher	Allows user selection: exact / fuzzy / hybrid
+Results renderer	Groups and lists students, courses, documents
+HTML-safe highlight rendering	Displays highlighted terms securely
+Snippet display	Shows contextual previews for documents
+Performance display	Shows response time and record count
+Rendering Highlights Safely
+
+To preserve <mark> tags returned from the backend while preventing HTML injection, the UI uses a controlled HTML rendering function (e.g. dangerouslySetInnerHTML with sanitisation).
+
+This approach follows secure rendering practices recommended in IR systems that generate HTML-formatted results (Büttcher, Clarke & Cormack, 2016).
+
+Frontend Architecture Add-On Diagram
+User Input (Next.js UI)
+        │
+        ▼
+Search Form → /api/search?q=...&mode=...
+        │
+        ▼
+Backend IR Engine (Node + Prisma + PostgreSQL)
+        │
+        ▼
+Receive JSON:
+- students[]
+- courses[]
+- documents[] + snippet + <mark>highlight</mark>
+- timeMs
+        │
+        ▼
+UI Components:
+- StudentList.jsx
+- CourseList.jsx
+- DocumentList.jsx
+
+
+
+8. Testing & Results
+
+This system was tested through browser requests, Postman, the Next.js UI, and an automated IR evaluation script. The goal was to validate correctness, effectiveness, and performance across both structured and unstructured academic data. Testing covered exact search, fuzzy matching, hybrid retrieval, response time, and edge-case behaviour.
+
+8.1 Functional Testing
+
+The API was run locally at:
+
+http://localhost:5000
+
+
+The frontend consumed it via:
+
+NEXT_PUBLIC_API_URL=http://localhost:5000
+
+
+Test requests confirmed that:
+
+Valid queries returned relevant students, courses, and documents
+
+Queries with misspellings recovered relevant results in fuzzy and hybrid mode
+
+Document results included contextual snippets
+
+<mark> highlighting tags were correctly returned and rendered by the UI
+
+Empty queries returned empty arrays without errors
+
+Search logs captured query text, response time, and result count
+
+8.2 Structured vs. Unstructured Retrieval
+
+Structured queries such as "john" retrieved student records.
+Content-based queries such as "assignment" retrieved PDF academic documents and highlighted matched terms inside snippets.
+This demonstrates correct integration of both data types.
+
+8.3 Precision, Recall, and F1-Score Evaluation
+
+A ground-truth dataset was created and the automated evaluation script executed each query across three modes:
+
+Exact match
+
+Fuzzy match (pg_trgm)
+
+Hybrid (exact + fuzzy)
+
+Results showed:
+
+Exact search had perfect precision for clean queries but failed on misspellings
+
+Fuzzy mode recovered misspellings but occasionally reduced precision
+
+Hybrid mode consistently provided the highest overall F1-score
+
+Latency increased in fuzzy mode due to similarity scans, as expected
+
+These results align with information retrieval theory regarding precision/recall trade-offs (Manning et al., 2008; Navarro, 2001).
+
+8.4 Performance Testing
+
+Response time was measured via response-time middleware and observation in the UI. The system consistently responded within millisecond ranges for small datasets, with increased latency when fuzzy operators were used. This behavior aligns with IR performance expectations (Büttcher et al., 2016).
+
+8.5 Edge-Case Behavior
+
+Edge cases validated:
+
+Case	Result
+Empty query	Empty result set, no error
+Misspelled query	Returned matches in fuzzy/hybrid mode
+Random string	No matches, safe exit
+Special characters	No crash, query sanitized via ORM
+Case variation (John vs john)	Same results
+8.6 Summary
+
+The system meets coursework testing requirements by demonstrating:
+
+Correct retrieval behaviour
+
+Hybrid IR performance advantages
+
+Robust handling of structured + unstructured data
+
+Good response times
+
+Proper error handling and input validation
+
+Screenshots and evaluation outputs are included in the appendix.
+
+Appendix — Test Cases and Screenshot Evidence
+Test Case Table
+Test	Query	Expected Output	Screenshot
+1	""	Empty results across all categories	Screenshot: Empty search
+2	john (exact)	Student records returned	Screenshot: /api/search?q=john&mode=exact
+3	jon (misspelling)	Fuzzy matches returning John records	Screenshot: /api/search?q=jon&mode=fuzzy
+4	jhn (more severe typo)	Hybrid returns correct students, fuzzy fallback	Screenshot: /api/search?q=jhn&mode=all
+5	assignment	Academic PDFs + snippets returned	Screenshot: /api/search?q=assignment
+6	CSC	Course + related PDFs	Screenshot: /api/search?q=CSC
+7	phyics	Fuzzy attempts match, no explosion / safe	Screenshot: /api/search?q=phyics
+8	SQL-like input (;--)	No failure, safe output	Screenshot: /api/search?q=%3B--
+9	Case-insensitivity	JOHN → same as john	Screenshot: /api/search?q=JOHN
+10	Response time check	timeMs included	Browser screenshot of timeMs header
+Screenshot Captions (Use for each image)
+Caption Template
+"Testing query <term>. System returns correct structured/unstructured data with highlighting and contextual snippets. Confirms retrieval pipeline functioning."
+
+Example captions:
+
+Empty query test: returns empty student/course/document arrays
+
+Exact match (john): retrieves student records, high precision
+
+Fuzzy match (jon): typo recovery validated
+
+Hybrid mode: merges exact + fuzzy, best recall
+
+Document search (assignment): snippet and highlight visible
+
+Timing header shown: response time captured
+
+You can now paste this directly in your report.
+
+
+
+
+

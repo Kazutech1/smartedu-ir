@@ -1,0 +1,96 @@
+{
+  "queries": [
+    {
+      "query": "John",
+      "relevant": [
+        { "type": "student", "id": 4 },
+        { "type": "student", "id": 5 },
+        { "type": "student", "id": 8 },
+        { "type": "student", "id": 9 },
+        { "type": "student", "id": 11 },
+        { "type": "student", "id": 12 },
+        { "type": "student", "id": 14 },
+        { "type": "student", "id": 17 },
+        { "type": "student", "id": 19 },
+        { "type": "student", "id": 21 }
+      ]
+    },
+    {
+      "query": "CSC",
+      "relevant": [
+        { "type": "document", "id": 15 },
+        { "type": "document", "id": 14 },
+        { "type": "document", "id": 13 },
+        { "type": "document", "id": 12 },
+        { "type": "document", "id": 11 },
+        { "type": "document", "id": 10 },
+        { "type": "document", "id": 9 },
+        { "type": "document", "id": 8 },
+        { "type": "document", "id": 7 },
+        { "type": "document", "id": 6 }
+      ]
+    },
+    {
+      "query": "Mathematics",
+      "relevant": [
+        { "type": "course", "id": 1 },
+        { "type": "document", "id": 5 }
+      ]
+    },
+    {
+      "query": "Transcript",
+      "relevant": []
+    },
+    {
+      "query": "Assignment",
+      "relevant": [
+        { "type": "document", "id": 15 },
+        { "type": "document", "id": 14 },
+        { "type": "document", "id": 13 },
+        { "type": "document", "id": 12 },
+        { "type": "document", "id": 11 },
+        { "type": "document", "id": 10 },
+        { "type": "document", "id": 9 },
+        { "type": "document", "id": 8 },
+        { "type": "document", "id": 7 },
+        { "type": "document", "id": 6 }
+      ]
+    },
+    {
+      "query": "Computer",
+      "relevant": [
+        { "type": "document", "id": 9 },
+        { "type": "document", "id": 3 }
+      ]
+    },
+    {
+      "query": "databse",
+      "relevant": [
+        { "type": "document", "id": 12 }
+      ]
+    },
+    {
+      "query": "phyics",
+      "relevant": []
+    },
+    {
+      "query": "Result",
+      "relevant": []
+    },
+    {
+      "query": "Lecture",
+      "relevant": [
+        { "type": "document", "id": 15 },
+        { "type": "document", "id": 14 },
+        { "type": "document", "id": 13 },
+        { "type": "document", "id": 12 },
+        { "type": "document", "id": 11 },
+        { "type": "document", "id": 10 },
+        { "type": "document", "id": 9 },
+        { "type": "document", "id": 8 },
+        { "type": "document", "id": 7 },
+        { "type": "document", "id": 6 }
+      ]
+    }
+  ]
+}

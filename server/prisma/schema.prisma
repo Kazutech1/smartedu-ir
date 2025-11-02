@@ -1,0 +1,128 @@
+// SmartEdU Information Retrieval System – Prisma Schema
+// Author: Ike
+// Structured + Unstructured Data for COMP-1859
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  name      String
+  email     String     @unique
+  role      String     // "lecturer" | "admin"
+  createdAt DateTime   @default(now())
+
+  // Relations
+  documents Document[] @relation("UserDocuments")
+}
+
+model Student {
+  id            Int          @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  email         String       @unique
+  studentNumber String       @unique
+  dob           DateTime?
+  createdAt     DateTime     @default(now())
+
+  // Relations
+  enrollments   Enrollment[]
+  grades        Grade[]
+}
+
+model Course {
+  id          Int          @id @default(autoincrement())
+  code        String       @unique
+  title       String
+  semester    String?
+  year        Int?
+  createdAt   DateTime     @default(now())
+
+  // Relations
+  enrollments Enrollment[]
+  grades      Grade[]
+}
+
+model Enrollment {
+  id        Int      @id @default(autoincrement())
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId Int
+
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  Int
+
+  year      Int
+  status    String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  grades    Grade[]
+}
+
+model Grade {
+  id           Int        @id @default(autoincrement())
+  assessment   String
+  score        Float
+  feedback     String?
+  createdAt    DateTime   @default(now())
+
+  // Relations
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id])
+  enrollmentId Int
+
+  student      Student?   @relation(fields: [studentId], references: [id])
+  studentId    Int?
+
+  course       Course?    @relation(fields: [courseId], references: [id])
+  courseId     Int?
+}
+
+model Document {
+  id           Int       @id @default(autoincrement())
+  filename     String
+  filePath     String    // ✅ so we can reference file location
+  mimeType     String
+  rawText      String?   // ✅ parsed searchable text
+  fileSize     Int?
+  uploadedAt   DateTime  @default(now())
+
+  // Relations
+  uploadedBy   User?     @relation("UserDocuments", fields: [uploadedById], references: [id])
+  uploadedById Int?
+
+  tags         DocumentTag[]
+}
+
+model Tag {
+  id   Int           @id @default(autoincrement())
+  name String        @unique
+
+  // Relations
+  docs DocumentTag[]
+}
+
+model DocumentTag {
+  id         Int      @id @default(autoincrement())
+
+  // Relations
+  document   Document @relation(fields: [documentId], references: [id])
+  documentId Int
+
+  tag        Tag      @relation(fields: [tagId], references: [id])
+  tagId      Int
+}
+
+model SearchLog {
+  id          Int      @id @default(autoincrement())
+  queryText   String
+  source      String?  // "students" | "documents" | "all"
+  timeMs      Float
+  resultCount Int
+  createdAt   DateTime @default(now())
+}

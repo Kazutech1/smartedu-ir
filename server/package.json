@@ -1,0 +1,55 @@
+{
+  "name": "smartedu-ir",
+  "version": "1.0.0",
+  "description": "The SmartEdU Information Retrieval System is a Node.js and PostgreSQL-based application that enables fast search and retrieval of academic data. Using Prisma ORM, it manages both structured data (students, courses, grades) and unstructured data (PDFs, reports, feedback) through unified search endpoints built with Express.js.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kazutech1/smartedu-ir.git"
+  },
+  "keywords": [
+    "keywords:",
+    "nodejs",
+    "express",
+    "prisma",
+    "postgresql",
+    "information-retrieval",
+    "search-system",
+    "education",
+    "academic-data",
+    "smartedu"
+  ],
+  "author": "Kazuto",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kazutech1/smartedu-ir/issues"
+  },
+  "homepage": "https://github.com/Kazutech1/smartedu-ir#readme",
+  "dependencies": {
+    "@prisma/client": "^6.18.0",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "pdf-extraction": "^1.0.2",
+    "pdf-parse": "^2.4.5",
+    "pdf2json": "^4.0.0",
+    "pdfjs-dist": "^5.4.296",
+    "pdfkit": "^0.17.2",
+    "prisma": "^6.18.0",
+    "response-time": "^2.3.4"
+  },
+  "devDependencies": {
+    "eslint": "^9.38.0",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2"
+  }
+}
