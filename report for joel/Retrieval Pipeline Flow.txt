@@ -1,0 +1,38 @@
+┌───────────────┐
+│   User Query   │
+│  (Input Text)  │
+└───────┬───────┘
+        ▼
+┌──────────────────────────┐
+│       Exact Search        │
+│ • ILIKE keyword match     │
+│ • Matches structured data │
+└───────┬──────────────────┘
+        │
+        ▼
+┌──────────────────────────┐
+│       Fuzzy Search        │
+│ • pg_trgm similarity %    │
+│ • Handles typos/variants  │
+└───────┬──────────────────┘
+        │
+        ▼
+┌──────────────────────────┐
+│     Merge Results         │
+│ • mergeUnique(exact,fuzzy)│
+│ • Remove duplicates       │
+└───────┬──────────────────┘
+        │
+        ▼
+┌──────────────────────────┐
+│      Rank Results         │
+│ • Exact-first priority    │
+│ • Similarity weighting    │
+└───────┬──────────────────┘
+        │
+        ▼
+┌──────────────────────────┐
+│      Display Output       │
+│ • Highlight terms <mark>  │
+│ • Snippets for documents  │
+└──────────────────────────┘

@@ -1,0 +1,60 @@
+┌──────────────────────────────┐
+│            User / UI         │
+│      Search Web Interface    │
+│  • Enter query               │
+│  • Select search mode        │
+│  • View highlighted results  │
+└──────────────┬───────────────┘
+               │  HTTP Request (/search?q=...&mode=...)
+               ▼
+┌──────────────────────────────┐
+│           Express API        │
+│  Controllers (students, docs,│
+│  courses, unified search)    │
+│  • Parse and validate query  │
+│  • Route to search service   │
+│                              │
+│  Middleware                  │
+│  • CORS / JSON parsing       │
+│  • Logging (morgan)          │
+│  • Response-time tracking    │
+└──────────────┬───────────────┘
+               │  Service Calls
+               ▼
+┌──────────────────────────────┐
+│       Search Service Layer   │
+│   unifiedSearch(query, mode) │
+│  • Exact keyword match       │
+│  • Fuzzy match (pg_trgm)     │
+│  • Snippet extraction        │
+│  • Term highlighting         │
+│  • Merge + dedupe results    │
+│  • Relevance ranking         │
+└──────────────┬───────────────┘
+               │  Prisma ORM Queries
+               ▼
+┌────────────────────────────────────────────┐
+│               PostgreSQL + Prisma          │
+│                                            │
+│  Structured Data                           │
+│   • Student(id, firstName, lastName, …)    │
+│   • Course(id, title, code, …)             │
+│                                            │
+│  Unstructured Data                         │
+│   • Document(id, filename, rawText, …)     │
+│                                            │
+│  Search Support                             │
+│   • pg_trgm extension for fuzzy search     │
+│   • Full-text compatible rawText field     │
+│   • SearchLog table for query analytics    │
+└────────────────────────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│         Evaluation Layer     │
+│  Node.js testing script      │
+│  • Runs benchmark queries    │
+│  • Measures latency          │
+│  • Computes precision/recall │
+│  • Outputs CSV results       │
+└──────────────────────────────┘

@@ -1,0 +1,39 @@
+           ┌───────────────────┐
+           │  Student Records   │
+           │ firstName, email… │
+           └─────────┬─────────┘
+                     │
+           ┌─────────▼──────────┐
+           │     Exact Search    │
+           │  ILIKE matching     │
+           └─────────┬──────────┘
+                     │
+┌───────────┐        │        ┌───────────┐
+│  Courses   │        │        │ Documents │
+│ title,code │        │        │ filename  │
+└─────┬──────┘        │        └──────┬────┘
+      │               │               │
+      ▼               ▼               ▼
+┌────────────────────────────────────────┐
+│           Fuzzy Search Layer           │
+│ • pg_trgm similarity                   │
+│ • Approximate matching                 │
+└───────────────────────┬────────────────┘
+                        │
+                        ▼
+┌────────────────────────────────────────┐
+│         Merge + Deduplication          │
+│ mergeUnique(exactResults,fuzzyResults) │
+└───────────────────────┬────────────────┘
+                        │
+                        ▼
+┌────────────────────────────────────────┐
+│      Highlight + Snippet Builder       │
+│ <mark> tokens, 80–100 char previews    │
+└───────────────────────┬────────────────┘
+                        │
+                        ▼
+┌────────────────────────────────────────┐
+│        Unified JSON API Response       │
+│ students[]  courses[]  documents[]     │
+└────────────────────────────────────────┘

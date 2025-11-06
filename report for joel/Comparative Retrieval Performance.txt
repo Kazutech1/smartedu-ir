@@ -1,0 +1,14 @@
+Retrieval Time (ms)
+┌────────────────────────────┐
+│ Mode      | Avg Time (ms)  │
+├───────────┼────────────────┤
+│ exact     | 1652.64        │
+│ fuzzy     | 2167.26        │
+│ all       | 1772.63        │
+└────────────────────────────┘
+
+Performance Interpretation:
+• exact = fastest  
+• all = blended performance  
+• fuzzy = slowest due to pg_trgm scanning  
+    

@@ -1,0 +1,19 @@
+Precision vs Recall (Mean Values)
+
+Mode       Precision    Recall
+---------------------------------
+exact        0.55         0.55
+fuzzy        0.24         0.10
+all          0.55         0.55
+---------------------------------
+
+ASCII Scatter Plot (higher is better)
+
+Recall →
+1.0 ┤            exact ●      all ●
+0.8 ┤
+0.6 ┤
+0.4 ┤
+0.2 ┤ fuzzy ●
+0.0 ┼────────────────────────────────
+      0.0     0.2     0.4     0.6     Precision →
