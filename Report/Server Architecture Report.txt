@@ -1,0 +1,212 @@
+================================================================================
+                   SmartEdU IR System - Server Architecture Report
+================================================================================
+
+PROJECT OVERVIEW
+----------------
+SmartEdU is a hybrid information retrieval system that searches both:
+  • Structured data (Students, Courses, Grades, Enrollments)
+  • Unstructured data (PDF documents with extracted text)
+
+The system provides exact keyword search, fuzzy/typo-tolerant search, and 
+combined mode with result highlighting and contextual snippets.
+
+================================================================================
+TECH STACK
+----------
+• Node.js + Express - REST API server
+• PostgreSQL - Database with pg_trgm extension for fuzzy search
+• Prisma ORM - Database access and migrations
+• pdfjs-dist - PDF text extraction
+• Next.js - Frontend (client folder)
+
+================================================================================
+ARCHITECTURE FLOW
+-----------------
+1. Request Flow:
+   Frontend → /api/search?q=query → Controller → Service → PostgreSQL
+   
+2. Data Processing:
+   - PDFs parsed and text stored in Document.rawText
+   - Structured data (students/courses) seeded via Prisma
+   - All searches logged with response time metrics
+
+3. Search Strategy:
+   EXACT MODE:   Prisma substring match (fast, precise)
+   FUZZY MODE:   PostgreSQL trigram similarity (typo-tolerant)
+   COMBINED:     Exact results first, then fuzzy (deduplicated)
+
+================================================================================
+KEY COMPONENTS
+--------------
+
+1. DATABASE SCHEMA (prisma/schema.prisma)
+   • Student - firstName, lastName, email, studentNumber
+   • Course - title, code, semester, year
+   • Enrollment - links students to courses
+   • Grade - assessment scores with feedback
+   • Document - filename, mimeType, rawText (parsed PDF), filePath
+   • User - lecturers/admins who upload documents
+   • SearchLog - tracks all queries with timing metrics
+
+2. API ROUTES (src/routes/)
+   • /api/search - main search endpoint (exact/fuzzy/combined)
+   • /api/students - student CRUD operations
+   • /api/documents - document management
+   • /api/health - server health check
+
+3. SEARCH SERVICE (src/service/search.service.js)
+   Core function: unifiedSearch(query, {limit, mode})
+   
+   Steps:
+   a) Exact Search - Prisma queries with case-insensitive contains
+      - Students: searches firstName, lastName, email, studentNumber
+      - Courses: searches title, code
+      - Documents: searches filename, rawText
+   
+   b) Fuzzy Search - PostgreSQL similarity() function
+      - Uses pg_trgm extension for trigram matching
+      - Threshold: 0.2 (balanced for typo tolerance)
+      - Ordered by similarity score (DESC)
+   
+   c) Merge Strategy
+      - Exact results prioritized
+      - Fuzzy results appended (deduplicated by ID)
+      - Limited to requested count
+   
+   d) Result Enhancement
+      - Highlighting: wraps matches in <mark> tags
+      - Snippets: extracts ~160 chars around match in documents
+      - HTML escaping for security
+
+4. MIDDLEWARE (src/middleware/)
+   • logger.js - request logging and response time tracking
+   • errorHandler.js - centralized error handling
+
+5. CONTROLLERS (src/controllers/)
+   • search.controller.js - validates query, calls service, logs metrics
+   • student.controller.js - student data operations
+   • document.controller.js - document upload/retrieval
+
+================================================================================
+SEARCH MODES
+------------
+1. EXACT (mode=exact)
+   - Fast substring matching
+   - Best for: precise queries, known terms
+   - Example: "John" → finds all Johns perfectly
+
+2. FUZZY (mode=fuzzy)
+   - Trigram similarity matching
+   - Best for: typos, misspellings
+   - Example: "Jhn" → still finds John (similarity > 0.2)
+
+3. COMBINED (mode=all, default)
+   - Runs both exact and fuzzy in parallel
+   - Merges results (exact first, then fuzzy)
+   - Best for: general use, balanced precision/recall
+   - Example: "assignment" → finds exact matches + similar terms
+
+================================================================================
+RESULT FORMATTING
+-----------------
+1. Highlighting
+   - Query tokens extracted and sorted by length
+   - Regex built for case-insensitive matching
+   - Matches wrapped in <mark> tags for frontend display
+
+2. Snippets (Documents only)
+   - Finds first match in rawText
+   - Extracts ~80 chars before + ~100 chars after
+   - Adds ellipsis (…) when text is trimmed
+   - Highlights query terms within snippet
+
+================================================================================
+EVALUATION SYSTEM
+-----------------
+• Ground truth queries defined in ground-truth.json
+• Evaluation script (evaluate-search.js) tests all modes
+• Metrics: Precision, Recall, F1 Score, Response Time
+• Results exported to evaluation-results.csv
+• Used to validate search quality and performance
+
+================================================================================
+REQUEST/RESPONSE EXAMPLE
+------------------------
+Request:
+  GET /api/search?q=assignment&limit=10
+
+Response:
+  {
+    "status": "success",
+    "data": {
+      "students": [],
+      "courses": [],
+      "documents": [
+        {
+          "id": 10,
+          "filename": "CSC260_Web_Development_<mark>Assignment</mark>2.pdf",
+          "mimeType": "application/pdf",
+          "snippet": "… analysis, <mark>assignment</mark> responses or …",
+          "fileSize": 45032,
+          "uploadedAt": "2024-11-20T..."
+        }
+      ]
+    },
+    "timeMs": 145
+  }
+
+================================================================================
+HOW IT WORKS END-TO-END
+------------------------
+1. User types query in Next.js frontend
+2. Frontend calls GET /api/search?q=query
+3. Controller receives request, validates query
+4. Service runs parallel searches:
+   - Prisma exact queries on all entity types
+   - SQL fuzzy queries using similarity()
+5. Results merged: exact first, then fuzzy (deduplicated)
+6. Highlighting applied to all text fields
+7. Snippets generated for document matches
+8. Query logged to SearchLog with timing
+9. JSON response sent to frontend
+10. Frontend renders three sections: Students, Courses, Documents
+11. User sees highlighted matches with contextual snippets
+
+================================================================================
+DATA INGESTION
+--------------
+1. Structured Data
+   - Seeded via prisma/seed.mjs
+   - Includes sample students, courses, enrollments, grades
+
+2. PDF Documents
+   - Placed in data/pdfs/
+   - Parsed with pdfjs-dist (first 1-2 pages)
+   - Text stored in Document.rawText field
+   - Metadata stored: filename, fileSize, mimeType, uploadedAt
+
+================================================================================
+PERFORMANCE FEATURES
+--------------------
+• Parallel query execution (Promise.all)
+• Database indexing via Prisma migrations
+• Response time middleware for monitoring
+• Query result limits to prevent overload
+• Search logging for analysis and optimization
+
+================================================================================
+KEY STRENGTHS
+-------------
+✓ Hybrid search (structured + unstructured)
+✓ Typo tolerance via fuzzy matching
+✓ Result highlighting and snippets
+✓ Fast response times (<200ms typical)
+✓ Comprehensive logging for evaluation
+✓ Clean separation of concerns (routes/controllers/services)
+✓ Type-safe database access via Prisma
+
+================================================================================
+END OF REPORT
+================================================================================
+
