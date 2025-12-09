@@ -1,39 +1,65 @@
 @import "tailwindcss";
 
 :root {
+  /* Minimalist Palette */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111111;
+
+  /* Primary Accent: Standard Blue */
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+
+  /* Neutrals */
+  --muted: #f9fafb;
+  --muted-foreground: #6b7280;
+
+  --card: #ffffff;
+  --card-foreground: #111111;
+
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+
+  /* Font Variables will be set by Next.js font loader */
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+
+  --font-sans: var(--font-sans);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    /* Force Light Mode for Simplicity as per request usually */
+    --foreground: #111111;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Simple Selection */
+::selection {
+  @apply bg-blue-100 text-blue-900;
+}
 
-
-/* Custom mark styling for search highlights */
+/* Standard Mark */
 mark {
-  @apply bg-yellow-200 px-1 rounded;
-  font-weight: inherit;
-}
-
-/* Smooth animations */
-* {
-  @apply transition-colors duration-150;
+  @apply bg-yellow-100 text-yellow-900 px-0.5 rounded-sm;
 }

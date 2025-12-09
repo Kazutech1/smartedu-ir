@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, Command, ArrowRight } from 'lucide-react';
 import { SearchMode } from '@/types';
 
 interface SearchBarProps {
@@ -33,40 +33,50 @@ export default function SearchBar({
   };
 
   return (
-    <div className="flex gap-3">
-      {/* Search Input */}
-      <div className="flex-1 relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+    <div className="flex gap-4 w-full max-w-3xl mx-auto animate-fade-in relative z-10">
+      <div className="flex-1 relative group">
+        <div className="absolute left-0 top-0 bottom-0 w-14 flex items-center justify-center">
+          <Search className="w-6 h-6 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+        </div>
         <input
           type="text"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Search students, courses, or documents..."
+          placeholder="Search students, courses, or docs..."
           disabled={isLoading}
-          className="w-full pl-12 pr-4 py-3.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 placeholder-slate-400 shadow-sm disabled:bg-slate-50 disabled:cursor-not-allowed"
+          className="w-full pl-14 pr-4 h-16 bg-white border-2 border-slate-100 rounded-2xl text-lg font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-medium shadow-xl shadow-indigo-100/40 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all"
         />
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-md text-xs font-bold text-slate-500 border border-slate-200">
+          <Command className="w-3 h-3" /> K
+        </div>
       </div>
 
-      {/* Mode Selector */}
-      <select
-        value={mode}
-        onChange={(e) => onModeChange(e.target.value as SearchMode)}
-        disabled={isLoading}
-        className="px-4 py-3.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 bg-white shadow-sm disabled:bg-slate-50 disabled:cursor-not-allowed min-w-[150px]"
-      >
-        <option value="exact">Exact Match</option>
-        <option value="fuzzy">Fuzzy Search</option>
-        <option value="all">All Results</option>
-      </select>
+      <div className="hidden sm:flex relative">
+        <select
+          value={mode}
+          onChange={(e) => onModeChange(e.target.value as SearchMode)}
+          disabled={isLoading}
+          className="appearance-none h-16 w-40 pl-5 pr-10 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-bold shadow-xl shadow-indigo-100/40 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all hover:bg-slate-50"
+        >
+          <option value="exact">Exact</option>
+          <option value="fuzzy">Fuzzy</option>
+          <option value="all">Deep</option>
+        </select>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-500">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2.5 4.5L6 8L9.5 4.5" />
+          </svg>
+        </div>
+      </div>
 
-      {/* Search Button */}
       <button
         onClick={onSearch}
         disabled={isLoading || !query.trim()}
-        className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-medium shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+        className="h-16 px-8 bg-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 hover:shadow-indigo-600/40 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:shadow-none disabled:translate-y-0 transition-all flex items-center gap-2"
       >
-        {isLoading ? 'Searching...' : 'Search'}
+        <span>Search</span>
+        <ArrowRight className="w-5 h-5" />
       </button>
     </div>
   );

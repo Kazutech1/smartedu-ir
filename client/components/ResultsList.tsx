@@ -28,22 +28,14 @@ export default function ResultsList({ results, activeTab }: ResultsListProps) {
   // Empty state
   if (currentResults.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4">
-        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-          <AlertCircle className="w-8 h-8 text-slate-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">
-          No {activeTab} found
-        </h3>
-        <p className="text-slate-600 text-center max-w-md">
-          Try adjusting your search query or switching to a different search mode.
-        </p>
+      <div className="text-center py-12 text-gray-500">
+        No {activeTab} found.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {activeTab === 'students' &&
         results.students.map((student) => (
           <StudentCard key={student.id} student={student} />

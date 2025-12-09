@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { BookOpen, Zap, Clock, AlertCircle, Timer } from 'lucide-react';
+import { BookOpen, Zap, Clock, AlertCircle, Timer, Sparkles, Filter } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
 import Tabs, { TabId } from '@/components/Tabs';
 import ResultsList from '@/components/ResultsList';
@@ -31,12 +31,12 @@ export default function HomePage() {
     setHasSearched(true);
 
     try {
-      const { 
-        results: searchResults, 
+      const {
+        results: searchResults,
         responseTime: time,
-        backendTime: bTime 
+        backendTime: bTime
       } = await searchAPI(query, mode);
-      
+
       setResults(searchResults);
       setResponseTime(time);
       setBackendTime(bTime);
@@ -70,24 +70,42 @@ export default function HomePage() {
   const networkLatency = responseTime && backendTime ? responseTime - backendTime : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          {/* Logo and Title */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <BookOpen className="w-7 h-7 text-white" />
+    <div className="min-h-screen">
+      {/* Glass Header */}
+      <header className="sticky top-0 z-50 glass backdrop-blur-md bg-white/70 border-b border-white/20 shadow-sm">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-tr from-indigo-600 to-violet-600 p-2 rounded-xl shadow-lg shadow-indigo-500/20">
+              <BookOpen className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">SmartEdU</h1>
-              <p className="text-sm text-slate-600">
-                Academic Information Retrieval System
+            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">SmartEdU</h1>
+          </div>
+          <div className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+            v2.0 Premium
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-5xl mx-auto px-6 py-12">
+
+        {/* Hero Section */}
+        <div className="mb-16 text-center animate-fade-in">
+          {!hasSearched && (
+            <div className="mb-10 space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-4">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">Intelligent Search</span>
+              </div>
+              <h2 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight">
+                Academic <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Intelligence.</span>
+              </h2>
+              <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+                Instantly access thousands of students, courses, and documents with our high-performance fuzzy search engine.
               </p>
             </div>
-          </div>
+          )}
 
-          {/* Search Bar */}
           <SearchBar
             query={query}
             mode={mode}
@@ -97,130 +115,52 @@ export default function HomePage() {
             isLoading={isLoading}
           />
 
-          {/* Search Statistics */}
+          {/* Stats & Metadata - Premium Pill */}
           {hasSearched && !error && results && (
-            <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-slate-600">
-              {/* Total Results */}
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500" />
-                <span className="font-medium">
-                  {totalResults} {totalResults === 1 ? 'result' : 'results'}
-                </span>
+            <div className="inline-flex items-center gap-4 mt-8 px-6 py-3 bg-white rounded-2xl border border-slate-100 shadow-xl shadow-indigo-100/50 animate-slide-up">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <Zap className="w-4 h-4 text-amber-500 fill-current" />
+                {totalResults} Results
               </div>
-
-              {/* Backend Processing Time */}
-              {backendTime !== null && (
-                <div className="flex items-center gap-2">
-                  <Timer className="w-4 h-4 text-blue-500" />
-                  <span>
-                    Backend:{' '}
-                    <span className="font-medium text-slate-900">
-                      {backendTime}ms
-                    </span>
-                  </span>
-                </div>
-              )}
-
-              {/* Total Response Time */}
-              {responseTime !== null && (
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <span>
-                    Total:{' '}
-                    <span className="font-medium text-slate-900">
-                      {responseTime}ms
-                    </span>
-                  </span>
-                </div>
-              )}
-
-              {/* Network Latency */}
-              {networkLatency !== null && networkLatency > 0 && (
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <span>
-                    (Network: {networkLatency}ms)
-                  </span>
-                </div>
-              )}
-
-              {/* Search Mode Indicator */}
-              <div className="ml-auto flex items-center gap-2 text-xs">
-                <span className="text-slate-500">Mode:</span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md font-medium">
-                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                </span>
+              <div className="w-px h-4 bg-slate-200"></div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <Timer className="w-4 h-4 text-indigo-500" />
+                {(responseTime || 0)}ms
+              </div>
+              <div className="ml-2 px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase rounded border border-indigo-100">
+                {mode} Mode
               </div>
             </div>
           )}
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-red-50/80 backdrop-blur border border-red-200 rounded-2xl p-6 mb-12 flex items-start gap-4 max-w-2xl mx-auto shadow-lg shadow-red-500/5 animate-fade-in">
+            <div className="p-2 bg-red-100 rounded-full shrink-0">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
             <div>
-              <h3 className="font-semibold text-red-900 mb-1">
-                Search Error
-              </h3>
-              <p className="text-sm text-red-700">{error}</p>
-              <p className="text-xs text-red-600 mt-2">
-                Make sure your backend server is running on{' '}
-                <code className="bg-red-100 px-1 py-0.5 rounded">
-                  http://localhost:5000
-                </code>
-              </p>
+              <h3 className="font-bold text-red-900 text-lg">Search Failed</h3>
+              <p className="text-red-700">{error}</p>
             </div>
           </div>
         )}
 
-        {/* Welcome State (before first search) */}
-        {!hasSearched && !isLoading && (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <BookOpen className="w-10 h-10 text-blue-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">
-              Welcome to SmartEdU
-            </h2>
-            <p className="text-slate-600 max-w-lg mx-auto mb-6">
-              Search for students, courses, and documents using our advanced
-              information retrieval system. Choose between exact matching,
-              fuzzy search, or view all results.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-slate-500">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                <span>Exact Match: Precise keyword search</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <span>Fuzzy Search: Tolerance for typos</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                <span>All Results: Comprehensive view</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Loading State */}
+        {/* Loading State - Premium Spinner */}
         {isLoading && (
-          <div className="text-center py-20">
-            <div className="inline-block w-12 h-12 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mb-4" />
-            <p className="text-slate-600">Searching academic database...</p>
-            <p className="text-xs text-slate-500 mt-2">
-              Query: "{query}" • Mode: {mode}
-            </p>
+          <div className="py-24 text-center">
+            <div className="relative w-16 h-16 mx-auto mb-6">
+              <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <p className="text-lg font-bold text-slate-700 animate-pulse">Searching Knowledge Base...</p>
           </div>
         )}
 
         {/* Results Display */}
         {!isLoading && results && !error && (
-          <>
+          <div className="mt-8 animate-slide-up">
             <Tabs
               activeTab={activeTab}
               onTabChange={setActiveTab}
@@ -231,37 +171,31 @@ export default function HomePage() {
             <div className="mt-6">
               <ResultsList results={results} activeTab={activeTab} />
             </div>
-          </>
+          </div>
         )}
 
         {/* No Results Message */}
         {!isLoading && hasSearched && !error && results && totalResults === 0 && (
-          <div className="text-center py-20">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-slate-400" />
+          <div className="py-24 text-center">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+              <Filter className="w-8 h-8 text-slate-300" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              No results found
-            </h3>
-            <p className="text-slate-600 max-w-md mx-auto mb-4">
-              No students, courses, or documents matched your search for "{query}"
-            </p>
-            <p className="text-sm text-slate-500">
-              Try adjusting your search query or switching to a different search mode.
-            </p>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No Matches Found</h3>
+            <p className="text-slate-500">We couldn't find anything for "{query}".</p>
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 mt-16 py-6 bg-white">
-        <div className="max-w-7xl mx-auto px-6 text-center text-sm text-slate-600">
-          <p>
-            SmartEdU Information Retrieval System • Built with Next.js 14 &
-            Tailwind CSS
-          </p>
-        </div>
-      </footer>
+      {!isLoading && !hasSearched && (
+        <footer className="fixed bottom-0 left-0 right-0 py-8 border-t border-slate-100 bg-white/80 backdrop-blur-md">
+          <div className="max-w-6xl mx-auto px-6 text-center">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              SmartEdU • Engineered for Speed
+            </p>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
